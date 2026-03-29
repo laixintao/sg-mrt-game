@@ -8,11 +8,10 @@ function getStationLabel(container, name) {
 }
 
 describe("App", () => {
-  it("defaults to geographic mode on first load", () => {
+  it("shows the geographic map by default", () => {
     render(<App />);
 
-    expect(screen.getByRole("button", { name: "Geographic" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Official Style" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText(/Real Singapore coastline and major waterways/i)).toBeInTheDocument();
   });
 
   it("does not reveal the selected station label before solving", async () => {
@@ -75,14 +74,13 @@ describe("App", () => {
     expect(screen.getByText("Guess This Station")).toBeInTheDocument();
   });
 
-  it("preserves solved stations when switching map modes", async () => {
+  it("keeps solved stations visible after a correct guess", async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
 
     await user.click(screen.getAllByLabelText("Hidden MRT station")[0]);
     await user.type(screen.getByPlaceholderText("Type the station name"), "Admiralty");
     await user.click(screen.getByRole("button", { name: "Submit Guess" }));
-    await user.click(screen.getByRole("button", { name: "Official Style" }));
 
     const admiraltyLabel = getStationLabel(container, "Admiralty");
 

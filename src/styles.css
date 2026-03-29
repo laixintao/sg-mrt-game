@@ -556,16 +556,20 @@ svg {
 }
 
 .station-solved-halo {
-  fill: rgba(15, 157, 88, 0.14);
-  stroke: rgba(15, 157, 88, 0.42);
-  stroke-width: 2;
+  fill: rgba(140, 214, 169, 0.12);
+  stroke: rgba(140, 214, 169, 0.28);
+  stroke-width: 1.8;
   pointer-events: none;
 }
 
 .station-button:not(.solved):not(.active) .station-ring {
-  fill: rgba(255, 255, 255, 0.92);
-  stroke: rgba(111, 119, 115, 0.88);
+  fill: #fffdf7;
+  stroke: rgba(78, 85, 82, 0.98);
   opacity: 0.92;
+}
+
+.station-button:not(.solved):not(.active) .station-dot {
+  fill: rgba(56, 62, 59, 0.98);
 }
 
 .station-button:hover .station-ring,
@@ -577,10 +581,10 @@ svg {
 }
 
 .station-button.solved .station-ring {
-  fill: rgba(18, 171, 92, 0.98);
-  stroke: #0a7d43;
-  stroke-width: 4.2;
-  opacity: 1;
+  fill: rgba(208, 239, 218, 0.98);
+  stroke: rgba(124, 181, 143, 0.92);
+  stroke-width: 2.8;
+  opacity: 0.7;
 }
 
 .station-label {
@@ -615,7 +619,7 @@ svg {
 }
 
 .station-button.solved .station-dot {
-  fill: #ffffff;
+  fill: rgba(92, 146, 110, 0.82);
 }
 
 .station-button.active .station-dot {
@@ -623,13 +627,15 @@ svg {
 }
 
 .station-glow {
-  fill: rgba(86, 98, 94, 0.12);
-  opacity: 0.75;
+  fill: rgba(255, 183, 0, 0.22);
+  stroke: rgba(255, 183, 0, 0.42);
+  stroke-width: 1.2;
+  opacity: 0.95;
   pointer-events: none;
 }
 
 .station-button.solved .station-label {
-  fill: #153b25;
+  fill: rgba(46, 96, 61, 0.82);
 }
 
 @media (max-width: 1120px) {

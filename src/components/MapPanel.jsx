@@ -1,28 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-const SCHEMATIC_LABEL_OVERRIDES = {
-  "bayfront": { dx: 18, dy: -14, anchor: "start" },
-  "bishan": { dx: 14, dy: -14, anchor: "start" },
-  "botanic-gardens": { dx: -16, dy: -14, anchor: "end" },
-  "bugis": { dx: 16, dy: -14, anchor: "start" },
-  "buona-vista": { dx: -16, dy: 18, anchor: "end" },
-  "city-hall": { dx: -14, dy: 18, anchor: "end" },
-  "dhoby-ghaut": { dx: -16, dy: -14, anchor: "end" },
-  "harbourfront": { dx: 16, dy: 18, anchor: "start" },
-  "little-india": { dx: -14, dy: 18, anchor: "end" },
-  "marina-bay": { dx: 18, dy: 22, anchor: "start" },
-  "newton": { dx: -14, dy: -14, anchor: "end" },
-  "orchard": { dx: -16, dy: 18, anchor: "end" },
-  "outram-park": { dx: -16, dy: 18, anchor: "end" },
-  "paya-lebar": { dx: 16, dy: 18, anchor: "start" },
-  "promenade": { dx: 16, dy: 0, anchor: "start" },
-  "raffles-place": { dx: 16, dy: 18, anchor: "start" },
-  "serangoon": { dx: 14, dy: -14, anchor: "start" },
-  "stevens": { dx: -16, dy: -14, anchor: "end" },
-};
-
-const SCHEMATIC_ISLAND_PATH = "M 260 150 C 340 70 430 60 580 80 C 720 96 806 64 958 112 C 1094 154 1266 120 1410 152 C 1474 198 1528 258 1572 320 C 1606 368 1610 430 1550 478 C 1501 518 1484 578 1494 642 C 1508 738 1470 840 1388 892 C 1310 942 1230 928 1166 1006 C 1090 1098 1030 1240 882 1282 C 738 1320 614 1290 536 1216 C 462 1144 422 1042 318 988 C 204 930 112 818 88 688 C 62 550 44 438 70 336 C 96 238 176 220 260 150 Z";
-
 function hashStationId(value) {
   let hash = 0;
 
@@ -69,28 +46,8 @@ function getGeographicLabelPlacement(station, mapViewBox) {
   return placements[variant];
 }
 
-function getLabelPlacement(station, mapMode, mapViewBox) {
-  if (mapMode === "schematic" && SCHEMATIC_LABEL_OVERRIDES[station.id]) {
-    return SCHEMATIC_LABEL_OVERRIDES[station.id];
-  }
-
+function getLabelPlacement(station, mapViewBox) {
   return getGeographicLabelPlacement(station, mapViewBox);
-}
-
-function renderModeButton(mode, activeMode, onModeChange, label) {
-  const isActive = mode === activeMode;
-
-  return (
-    <button
-      key={mode}
-      type="button"
-      className={`mode-toggle-button${isActive ? " active" : ""}`}
-      aria-pressed={isActive}
-      onClick={() => onModeChange(mode)}
-    >
-      {label}
-    </button>
-  );
 }
 
 function linePathToD(path) {
@@ -121,8 +78,6 @@ function scaleValue(value, zoom) {
 function MapPanel({
   backgroundData,
   mapData,
-  mapMode,
-  onModeChange,
   onReset,
   onSelectStation,
   selectedStationId,
@@ -133,14 +88,14 @@ function MapPanel({
   const [viewport, setViewport] = useState(() => createViewport(mapData.mapViewBox));
   const [isDragging, setIsDragging] = useState(false);
   const zoom = Number((mapData.mapViewBox.width / viewport.width).toFixed(2));
-  const labelFontSize = scaleValue(mapMode === "schematic" ? 12 : 11, zoom);
+  const labelFontSize = scaleValue(11, zoom);
   const labelStrokeWidth = scaleValue(4, zoom);
-  const labelWeight = mapMode === "schematic" ? 800 : 700;
+  const labelWeight = 700;
 
   useEffect(() => {
     setViewport(createViewport(mapData.mapViewBox));
     setIsDragging(false);
-  }, [mapData.mapViewBox.height, mapData.mapViewBox.width, mapMode]);
+  }, [mapData.mapViewBox.height, mapData.mapViewBox.width]);
 
   function clampViewport(nextViewport) {
     return {
@@ -258,25 +213,17 @@ function MapPanel({
       <div className="panel-header">
         <div>
           <h2>Map</h2>
-          <p className="panel-copy">
-            {mapMode === "schematic"
-              ? "Schematic system-map view tuned toward the official LTA picture."
-              : "Real Singapore coastline and major waterways behind the network."}
-          </p>
+          <p className="panel-copy">Real Singapore coastline and major waterways behind the network.</p>
         </div>
 
         <div className="panel-actions">
-          <div className="mode-toggle" role="group" aria-label="Map display mode">
-            {renderModeButton("geographic", mapMode, onModeChange, "Geographic")}
-            {renderModeButton("schematic", mapMode, onModeChange, "Official Style")}
-          </div>
           <button className="ghost-button" type="button" onClick={onReset}>
             Reset Game
           </button>
         </div>
       </div>
 
-      <div ref={frameRef} className={`map-frame ${mapMode}`}>
+      <div ref={frameRef} className="map-frame geographic">
         <div className="map-toolbar">
           <span className="zoom-hint">Wheel to zoom, drag background to pan</span>
           <span className="zoom-indicator" aria-live="polite">
@@ -321,46 +268,36 @@ function MapPanel({
           <svg
             viewBox={`${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`}
             role="img"
-            aria-label={
-              mapMode === "schematic"
-                ? "Singapore MRT schematic map quiz"
-                : "Singapore MRT geographic map quiz"
-            }
+            aria-label="Singapore MRT geographic map quiz"
           >
             <rect
               x="0"
               y="0"
               width={mapData.mapViewBox.width}
               height={mapData.mapViewBox.height}
-              className={`water ${mapMode}`}
+              className="water geographic"
             />
 
-            {mapMode === "schematic" && (
-              <path d={SCHEMATIC_ISLAND_PATH} className="schematic-island" />
-            )}
-
-            {mapMode === "geographic" && (
-              <>
-                {backgroundData.coastlinePolygons.map((polygon) => (
-                  <path key={polygon.id} d={polygon.path} className="coastline" />
-                ))}
-                {backgroundData.waterPolygons.map((polygon) => (
-                  <path key={polygon.id} d={polygon.path} className="hydro" />
-                ))}
-                {backgroundData.waterLabels.map((label) => (
-                  <text key={label.name} x={label.x} y={label.y} className="water-label">
-                    {label.name}
-                  </text>
-                ))}
-              </>
-            )}
+            <>
+              {backgroundData.coastlinePolygons.map((polygon) => (
+                <path key={polygon.id} d={polygon.path} className="coastline" />
+              ))}
+              {backgroundData.waterPolygons.map((polygon) => (
+                <path key={polygon.id} d={polygon.path} className="hydro" />
+              ))}
+              {backgroundData.waterLabels.map((label) => (
+                <text key={label.name} x={label.x} y={label.y} className="water-label">
+                  {label.name}
+                </text>
+              ))}
+            </>
 
             {mapData.lines.map((line) =>
               line.paths.map((path, pathIndex) => (
                 <path
                   key={`${line.id}-${pathIndex}`}
                   d={linePathToD(path)}
-                  className={`map-line ${mapMode}`}
+                  className="map-line geographic"
                   stroke={line.color}
                   vectorEffect="non-scaling-stroke"
                 />
@@ -370,13 +307,13 @@ function MapPanel({
             {mapData.stations.map((station) => {
               const isSolved = solved.has(station.id);
               const isActive = selectedStationId === station.id;
-              const { dx, dy, anchor } = getLabelPlacement(station, mapMode, mapData.mapViewBox);
-              const hitAreaRadius = scaleValue(mapMode === "schematic" ? 17 : 15, zoom);
+              const { dx, dy, anchor } = getLabelPlacement(station, mapData.mapViewBox);
+              const hitAreaRadius = scaleValue(15, zoom);
               const focusRingRadius = scaleValue(14, zoom);
               const solvedHaloRadius = scaleValue(15.5, zoom);
               const selectionRadius = scaleValue(12, zoom);
               const glowRadius = scaleValue(10, zoom);
-              const stationRingRadius = scaleValue(mapMode === "schematic" ? 7.8 : 7.2, zoom);
+              const stationRingRadius = scaleValue(7.2, zoom);
               const stationDotRadius = scaleValue(2.8, zoom);
 
               return (
@@ -416,7 +353,7 @@ function MapPanel({
                     x={station.x + scaleValue(dx, zoom)}
                     y={station.y + scaleValue(dy, zoom)}
                     textAnchor={anchor}
-                    className={`station-label ${mapMode}${isSolved ? " visible" : ""}`}
+                    className={`station-label geographic${isSolved ? " visible" : ""}`}
                     style={{
                       fontSize: `${labelFontSize}px`,
                       strokeWidth: `${labelStrokeWidth}px`,

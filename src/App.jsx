@@ -3,15 +3,10 @@ import GuessPanel from "./components/GuessPanel.jsx";
 import MapPanel from "./components/MapPanel.jsx";
 import { coastlinePolygons, waterLabels, waterPolygons } from "./data/geographicBackgroundData.js";
 import * as geographicMapData from "./data/geographicMapData.js";
-import * as schematicMapData from "./data/schematicMapData.js";
 import { getSuggestions, isCorrectGuess } from "./lib/answerMatching.js";
 
 const stationLookup = new Map(geographicMapData.stations.map((station) => [station.id, station]));
 const backgroundData = { coastlinePolygons, waterPolygons, waterLabels };
-const mapDataByMode = {
-  geographic: geographicMapData,
-  schematic: schematicMapData,
-};
 const lineOrder = ["nsl", "ewl", "nel", "ccl", "dtl", "tel"];
 
 function stationCodeValue(station, prefix) {
@@ -206,7 +201,6 @@ function getNextAutoSelection(currentStationId, solved, preferredLineId, current
 
 function getInitialState() {
   return {
-    mapMode: "geographic",
     selectedStationId: null,
     currentLineId: null,
     currentLineDirection: 0,
@@ -231,7 +225,6 @@ function App() {
   const totalCount = geographicMapData.stations.length;
   const remainingCount = totalCount - solvedCount;
   const accuracy = game.attempts === 0 ? 100 : Math.round((game.correct / game.attempts) * 100);
-  const mapData = game.mapMode === "schematic" ? schematicMapData : geographicMapData;
   const selectedStation = game.selectedStationId ? stationLookup.get(game.selectedStationId) : null;
 
   const guessPanelTitle = selectedStation
@@ -274,13 +267,6 @@ function App() {
         completed: false,
       };
     });
-  }
-
-  function setMapMode(nextMode) {
-    setGame((current) => ({
-      ...current,
-      mapMode: nextMode,
-    }));
   }
 
   function changeAnswerInput(value) {
@@ -430,7 +416,7 @@ function App() {
             <h1>Singapore MRT Map Quiz</h1>
             <p className="subtitle">
               Click a station dot, type the station name with autocomplete, and reveal the
-              full network in geographic or official-style schematic view.
+              full network on the geographic MRT map.
             </p>
           </div>
 
@@ -453,9 +439,7 @@ function App() {
         <main className="game-layout">
           <MapPanel
             backgroundData={backgroundData}
-            mapData={mapData}
-            mapMode={game.mapMode}
-            onModeChange={setMapMode}
+            mapData={geographicMapData}
             onReset={resetGame}
             onSelectStation={selectStation}
             selectedStationId={game.selectedStationId}
