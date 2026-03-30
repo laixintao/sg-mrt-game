@@ -77,6 +77,7 @@ function scaleValue(value, zoom) {
 
 function MapPanel({
   backgroundData,
+  celebrationStationId,
   mapData,
   onReset,
   onSelectStation,
@@ -230,6 +231,14 @@ function MapPanel({
             {Math.round(zoom * 100)}%
           </span>
           <button
+            className="zoom-button preset"
+            type="button"
+            aria-label="Zoom to 200 percent"
+            onClick={() => updateZoom(2)}
+          >
+            200%
+          </button>
+          <button
             className="zoom-button"
             type="button"
             aria-label="Zoom in"
@@ -285,11 +294,6 @@ function MapPanel({
               {backgroundData.waterPolygons.map((polygon) => (
                 <path key={polygon.id} d={polygon.path} className="hydro" />
               ))}
-              {backgroundData.waterLabels.map((label) => (
-                <text key={label.name} x={label.x} y={label.y} className="water-label">
-                  {label.name}
-                </text>
-              ))}
             </>
 
             {mapData.lines.map((line) =>
@@ -307,6 +311,7 @@ function MapPanel({
             {mapData.stations.map((station) => {
               const isSolved = solved.has(station.id);
               const isActive = selectedStationId === station.id;
+              const isCelebrating = celebrationStationId === station.id;
               const { dx, dy, anchor } = getLabelPlacement(station, mapData.mapViewBox);
               const hitAreaRadius = scaleValue(15, zoom);
               const focusRingRadius = scaleValue(14, zoom);
@@ -319,7 +324,7 @@ function MapPanel({
               return (
                 <g
                   key={station.id}
-                  className={`station-button${isSolved ? " solved" : ""}${isActive ? " active" : ""}`}
+                  className={`station-button${isSolved ? " solved" : ""}${isActive ? " active" : ""}${isCelebrating ? " celebrating" : ""}`}
                 >
                   <circle
                     cx={station.x}
@@ -339,6 +344,17 @@ function MapPanel({
                     }}
                   />
                   <circle cx={station.x} cy={station.y} r={focusRingRadius} className="station-focus-ring" />
+                  {isCelebrating && (
+                    <circle cx={station.x} cy={station.y} r={selectionRadius} className="station-celebration-ring">
+                      <animate attributeName="r" from={selectionRadius} to={scaleValue(26, zoom)} dur="0.95s" begin="0s" fill="freeze" />
+                      <animate attributeName="opacity" from="0.9" to="0" dur="0.95s" begin="0s" fill="freeze" />
+                    </circle>
+                  )}
+                  {isCelebrating && (
+                    <circle cx={station.x} cy={station.y} r={stationRingRadius} className="station-celebration-flash">
+                      <animate attributeName="opacity" values="0;0.9;0" dur="0.7s" begin="0s" fill="freeze" />
+                    </circle>
+                  )}
                   {isSolved && <circle cx={station.x} cy={station.y} r={solvedHaloRadius} className="station-solved-halo" />}
                   {isActive && <circle cx={station.x} cy={station.y} r={selectionRadius} className="station-selection" />}
                   {!isSolved && !isActive && <circle cx={station.x} cy={station.y} r={glowRadius} className="station-glow" />}

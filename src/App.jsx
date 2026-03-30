@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import GuessPanel from "./components/GuessPanel.jsx";
 import MapPanel from "./components/MapPanel.jsx";
 import { coastlinePolygons, waterLabels, waterPolygons } from "./data/geographicBackgroundData.js";
@@ -8,6 +8,7 @@ import { getSuggestions, isCorrectGuess } from "./lib/answerMatching.js";
 const stationLookup = new Map(geographicMapData.stations.map((station) => [station.id, station]));
 const backgroundData = { coastlinePolygons, waterPolygons, waterLabels };
 const lineOrder = ["nsl", "ewl", "nel", "ccl", "dtl", "tel"];
+const lineNameById = Object.fromEntries(geographicMapData.lines.map((line) => [line.id, line.name]));
 
 function stationCodeValue(station, prefix) {
   const code = station.code.split("/").find((entry) => entry.startsWith(prefix));
@@ -199,11 +200,27 @@ function getNextAutoSelection(currentStationId, solved, preferredLineId, current
   };
 }
 
+function getStationHint(station) {
+  const words = station.name.split(/[\s-]+/).filter(Boolean);
+  const initials = words.map((word) => word[0].toUpperCase()).join(" ");
+  const letterCount = station.name.replace(/[^A-Za-z]/g, "").length;
+  const lineHint = station.lines.map((lineId) => lineNameById[lineId]).join(" / ");
+
+  if (words.length === 1) {
+    return `Hint: starts with "${initials}", has ${letterCount} letters, and sits on ${lineHint}.`;
+  }
+
+  return `Hint: initials "${initials}", ${letterCount} letters total, on ${lineHint}.`;
+}
+
 function getInitialState() {
   return {
     selectedStationId: null,
     currentLineId: null,
     currentLineDirection: 0,
+    hintsEnabled: true,
+    hintText: "",
+    celebrationStationId: null,
     solved: new Set(),
     attempts: 0,
     correct: 0,
@@ -238,6 +255,65 @@ function App() {
     [game.suggestions],
   );
 
+  useEffect(() => {
+    if (!game.hintsEnabled || !game.selectedStationId || game.completed) {
+      return undefined;
+    }
+
+    const targetStationId = game.selectedStationId;
+
+    if (game.solved.has(targetStationId)) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setGame((current) => {
+        if (
+          !current.hintsEnabled
+          || current.completed
+          || current.selectedStationId !== targetStationId
+          || current.solved.has(targetStationId)
+          || current.hintText
+        ) {
+          return current;
+        }
+
+        const targetStation = stationLookup.get(targetStationId);
+
+        if (!targetStation) {
+          return current;
+        }
+
+        return {
+          ...current,
+          hintText: getStationHint(targetStation),
+        };
+      });
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [game.answerInput, game.attempts, game.completed, game.hintsEnabled, game.selectedStationId, game.solved]);
+
+  useEffect(() => {
+    if (!game.celebrationStationId) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setGame((current) => (
+        current.celebrationStationId === game.celebrationStationId
+          ? { ...current, celebrationStationId: null }
+          : current
+      ));
+    }, 1300);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [game.celebrationStationId]);
+
   function updateSuggestions(answerInput) {
     return getSuggestions(geographicMapData.stations, answerInput, 8);
   }
@@ -257,6 +333,7 @@ function App() {
         selectedStationId: stationId,
         currentLineId: pickLineForStation(stationId, current.solved, current.currentLineId),
         currentLineDirection: 0,
+        hintText: "",
         answerInput: "",
         suggestions: [],
         highlightedSuggestionIndex: 0,
@@ -273,6 +350,7 @@ function App() {
     setGame((current) => ({
       ...current,
       answerInput: value,
+      hintText: "",
       suggestions: current.selectedStationId ? updateSuggestions(value) : [],
       highlightedSuggestionIndex: 0,
       statusText: current.selectedStationId ? "Type the station name below." : current.statusText,
@@ -302,6 +380,7 @@ function App() {
           ...current,
           attempts: nextAttempts,
           answerInput: inputValue,
+          hintText: "",
           suggestions: updateSuggestions(inputValue),
           highlightedSuggestionIndex: 0,
           statusText: "That guess is not correct. Adjust the name and try again.",
@@ -329,6 +408,8 @@ function App() {
         selectedStationId: nextAutoSelection.stationId,
         currentLineId: nextAutoSelection.lineId,
         currentLineDirection: nextAutoSelection.lineDirection,
+        hintText: "",
+        celebrationStationId: current.selectedStationId,
         answerInput: "",
         suggestions: [],
         highlightedSuggestionIndex: 0,
@@ -402,6 +483,14 @@ function App() {
     setGame(getInitialState());
   }
 
+  function toggleHintsEnabled() {
+    setGame((current) => ({
+      ...current,
+      hintsEnabled: !current.hintsEnabled,
+      hintText: "",
+    }));
+  }
+
   function handleFormSubmit(event) {
     event.preventDefault();
     submitAnswer();
@@ -439,6 +528,7 @@ function App() {
         <main className="game-layout">
           <MapPanel
             backgroundData={backgroundData}
+            celebrationStationId={game.celebrationStationId}
             mapData={geographicMapData}
             onReset={resetGame}
             onSelectStation={selectStation}
@@ -456,6 +546,7 @@ function App() {
             onInputKeyDown={handleInputKeyDown}
             onSelectSuggestion={handleSuggestionSelect}
             onSubmit={handleFormSubmit}
+            onToggleHints={toggleHintsEnabled}
             promptCopy={game.promptCopy}
             promptTitle={game.promptTitle}
             selectedStationId={game.selectedStationId}
@@ -465,6 +556,8 @@ function App() {
             statusTone={game.statusTone}
             suggestions={visibleSuggestions}
             totalCount={totalCount}
+            hintText={game.hintText}
+            hintsEnabled={game.hintsEnabled}
           />
         </main>
       </div>

@@ -1,11 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App.jsx";
 
 function getStationLabel(container, name) {
   return [...container.querySelectorAll(".station-label")].find((node) => node.textContent === name);
 }
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("App", () => {
   it("shows the geographic map by default", () => {
@@ -46,7 +50,7 @@ describe("App", () => {
 
   it("automatically selects the next station after a correct guess", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    const { container } = render(<App />);
 
     await user.click(screen.getAllByLabelText("Hidden MRT station")[0]);
     await user.type(screen.getByPlaceholderText("Type the station name"), "Admiralty");
@@ -56,6 +60,7 @@ describe("App", () => {
     expect(screen.getByPlaceholderText("Type the station name")).toHaveValue("");
     expect(screen.getByPlaceholderText("Type the station name")).toBeEnabled();
     expect(screen.getByText("Guess This Station")).toBeInTheDocument();
+    expect(container.querySelector(".station-celebration-ring")).toBeInTheDocument();
   });
 
   it("keeps the station selected and hidden after a wrong guess", async () => {
@@ -91,8 +96,37 @@ describe("App", () => {
   it("renders zoom controls for dense downtown areas", () => {
     render(<App />);
 
+    expect(screen.getByRole("button", { name: "Zoom to 200 percent" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zoom in" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zoom out" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Reset zoom and pan" })).toBeInTheDocument();
+  });
+
+  it("shows a hint after 5 seconds on the same station", async () => {
+    vi.useFakeTimers();
+    render(<App />);
+
+    fireEvent.click(screen.getAllByLabelText("Hidden MRT station")[0]);
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(screen.getByText(/^Hint$/i)).toBeInTheDocument();
+    expect(screen.getByText(/starts with|initials/i)).toBeInTheDocument();
+  });
+
+  it("does not show hints when auto hints are turned off", async () => {
+    vi.useFakeTimers();
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Auto hints after 5s: On/i }));
+    fireEvent.click(screen.getAllByLabelText("Hidden MRT station")[0]);
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(screen.queryByText(/^Hint$/i)).not.toBeInTheDocument();
   });
 });

@@ -281,6 +281,10 @@ svg {
   min-width: auto;
 }
 
+.zoom-button.preset {
+  min-width: 72px;
+}
+
 .map-canvas {
   transform-origin: center center;
   transition: transform 180ms ease;
@@ -376,6 +380,23 @@ svg {
   color: var(--danger);
 }
 
+.hint-row {
+  margin-top: 12px;
+}
+
+.hint-toggle {
+  border: 1px solid rgba(34, 50, 44, 0.1);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 10px 14px;
+}
+
+.hint-toggle.active {
+  background: rgba(29, 45, 40, 0.92);
+  color: white;
+}
+
 .primary-button,
 .submit-button {
   background: var(--accent);
@@ -430,6 +451,19 @@ svg {
 .suggestion-button.active {
   background: var(--accent-soft);
   border-color: rgba(255, 111, 60, 0.25);
+}
+
+.hint-card {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 245, 223, 0.9);
+  border: 1px solid rgba(255, 179, 0, 0.18);
+  color: #5d4a19;
+}
+
+.hint-card p:last-child {
+  line-height: 1.5;
 }
 
 .progress-bar {
@@ -544,6 +578,18 @@ svg {
   fill: rgba(255, 111, 60, 0.22);
   stroke: rgba(255, 111, 60, 1);
   stroke-width: 3;
+  pointer-events: none;
+}
+
+.station-celebration-ring {
+  fill: rgba(255, 214, 102, 0.16);
+  stroke: rgba(255, 179, 0, 0.92);
+  stroke-width: 2.4;
+  pointer-events: none;
+}
+
+.station-celebration-flash {
+  fill: rgba(255, 255, 255, 0.8);
   pointer-events: none;
 }
 

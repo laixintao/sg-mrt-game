@@ -5,11 +5,14 @@ function GuessPanel({
   answerInput,
   attempts,
   highlightedSuggestionIndex,
+  hintText,
+  hintsEnabled,
   onChangeInput,
   onHighlightSuggestion,
   onInputKeyDown,
   onSelectSuggestion,
   onSubmit,
+  onToggleHints,
   promptCopy,
   promptTitle,
   selectedStationId,
@@ -52,6 +55,17 @@ function GuessPanel({
           {statusText}
         </div>
 
+        <div className="hint-row">
+          <button
+            type="button"
+            className={`hint-toggle${hintsEnabled ? " active" : ""}`}
+            aria-pressed={hintsEnabled}
+            onClick={onToggleHints}
+          >
+            Auto hints after 5s: {hintsEnabled ? "On" : "Off"}
+          </button>
+        </div>
+
         <form className="guess-form" onSubmit={onSubmit}>
           <label className="sr-only" htmlFor="station-answer">
             Type the station name
@@ -75,6 +89,13 @@ function GuessPanel({
             Submit Guess
           </button>
         </form>
+
+        {hintText && (
+          <div className="hint-card" role="status" aria-live="polite">
+            <p className="card-kicker">Hint</p>
+            <p>{hintText}</p>
+          </div>
+        )}
 
         {suggestions.length > 0 && (
           <ul id="station-suggestions" className="suggestions-list" role="listbox" aria-label="Station suggestions">
