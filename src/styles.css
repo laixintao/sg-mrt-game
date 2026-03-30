@@ -17,11 +17,22 @@
   --coast-fill: rgba(253, 249, 241, 0.78);
   --coast-stroke: rgba(72, 86, 80, 0.16);
   --shadow: 0 18px 50px rgba(31, 47, 41, 0.12);
+  --scroll-track: rgba(24, 40, 35, 0.16);
+  --scroll-thumb: linear-gradient(180deg, #1f5f4d, #ff8f3f);
+  --scroll-thumb-border: rgba(255, 248, 235, 0.95);
   font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  overflow-y: scroll;
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: thin;
+  scrollbar-color: #1f5f4d rgba(24, 40, 35, 0.16);
 }
 
 body {
@@ -31,6 +42,32 @@ body {
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 32%),
     linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 16px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.18)),
+    var(--scroll-track);
+  border-left: 1px solid rgba(34, 50, 44, 0.08);
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 999px;
+  border: 3px solid var(--scroll-thumb-border);
+  box-shadow: inset 0 0 0 1px rgba(29, 45, 40, 0.12);
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #24735d, #ff7b2f);
 }
 
 button,
@@ -55,7 +92,7 @@ input {
 }
 
 .page-shell {
-  width: min(1440px, calc(100vw - 32px));
+  width: min(1440px, calc(100% - 32px));
   margin: 0 auto;
   padding: 24px 0 40px;
 }
@@ -700,7 +737,7 @@ svg {
 
 @media (max-width: 720px) {
   .page-shell {
-    width: min(100vw - 16px, 100%);
+    width: calc(100% - 16px);
     padding-top: 16px;
   }
 
